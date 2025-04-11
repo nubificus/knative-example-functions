@@ -1,0 +1,8 @@
+[submodule "unikernel-httpreply"]
+	path = unikernel-httpreply
+	url = https://github.com/nubificus/app-httpreply
+	branch = nbfc-knative-html-athk8s
+[submodule "go-httpreply"]
+	path = go-httpreply
+	url = https://github.com/nubificus/helloworld-knative
+	branch = feat_athk8s
