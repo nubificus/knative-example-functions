@@ -2,6 +2,9 @@
 	path = unikernel-httpreply
 	url = https://github.com/nubificus/app-httpreply
 	branch = nbfc-knative-html-athk8s
+[submodule "c-httpreply"]
+	path = c-httpreply
+	url = https://github.com/nubificus/c-httpreply
 [submodule "go-httpreply"]
 	path = go-httpreply
 	url = https://github.com/nubificus/helloworld-knative
