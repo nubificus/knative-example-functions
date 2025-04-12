@@ -77,15 +77,15 @@ jobs:
         mkdir -p ${{ github.workspace }}/artifact
         cp workdir/build/${{ inputs.unikernel }}_${{ inputs.hypervisor }}-${LOCALARCH} ${{ github.workspace }}/artifact/${{ inputs.unikernel }}_${{ inputs.hypervisor }}-${{inputs.matrix}}
 
-    - name: Upload packaged artifact to s3
-      uses: cloudkernels/minio-upload@v5
-      with:
-        url: https://s3.nbfc.io
-        access-key: ${{ secrets.aws_access_key }}
-        secret-key: ${{ secrets.aws_secret_access_key }}
-        remote-path: bima/${{inputs.matrix}}/${{ inputs.unikernel }}_${{inputs.hypervisor}}-${{inputs.matrix}}
-        local-path: ${{ github.workspace }}/artifact/${{ inputs.unikernel }}_${{inputs.hypervisor }}-${{ inputs.matrix }}
-        policy: 1
+#    - name: Upload packaged artifact to s3
+#      uses: cloudkernels/minio-upload@v5
+#      with:
+#        url: https://s3.nbfc.io
+#        access-key: ${{ secrets.aws_access_key }}
+#        secret-key: ${{ secrets.aws_secret_access_key }}
+#        remote-path: bima/${{inputs.matrix}}/${{ inputs.unikernel }}_${{inputs.hypervisor}}-${{inputs.matrix}}
+#        local-path: ${{ github.workspace }}/artifact/${{ inputs.unikernel }}_${{inputs.hypervisor }}-${{ inputs.matrix }}
+#        policy: 1
 
     - name: Login to registry ${{ env.REGISTRY }}
       uses: docker/login-action@v3
