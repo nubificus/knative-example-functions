@@ -42,7 +42,7 @@ env:
   # NOTE: We assume that a project named after the repo owner exists in the
   # registry. The image will be uploaded as <repo_name> under the <repo_owner>
   # project.
-  REGISTRY_IMAGE: ${{ github.event.inputs.registry || 'harbor.nbfc.io' }}/${{ github.repository }}
+  REGISTRY_IMAGE: ${{ github.event.inputs.registry || 'harbor.nbfc.io' }}/${{ github.repository }}/${{ inputs.unikernel }}-${{ inputs.hypervisor }}
   RUNNER_ARCH_MAP: '[{"amd64":"x86_64", "arm64":"aarch64", "arm":"armv7l"}]'
 
 
@@ -65,13 +65,17 @@ jobs:
       run: |
         sudo apt update && sudo apt install -y bison flex unzip
         cd unikernel-httpreply
-        git clone https://github.com/unikraft/unikraft workdir/unikraft/unikraft -b RELEASE-0.18.0
-        git clone https://github.com/unikraft/lib-lwip workdir/unikraft/libs/lwip -b RELEASE-0.18.0
-        LOCALARCH=$(uname -m | sed s/aarch64/arm64/)
-        UK_DEFCONFIG=$(pwd)/.config.${{ inputs.unikernel}}_${{ inputs.hypervisor }}-${LOCALARCH} make defconfig
+        git clone https://github.com/unikraft/unikraft workdir/unikraft -b RELEASE-0.18.0
+        git clone https://github.com/unikraft/lib-lwip workdir/libs/lwip -b RELEASE-0.18.0
+        export LOCALARCH=$(uname -m | sed s/aarch64/arm64/)
+        ls -la $(pwd)
+        export UK_DEFCONFIG=$(pwd)/.config.${{ inputs.unikernel}}_${{ inputs.hypervisor }}-${LOCALARCH} 
+        echo $LOCALARCH
+        echo $UK_DEFCONFIG
+        make defconfig
         make -j $(nproc)
         mkdir -p ${{ github.workspace }}/artifact
-        cp build/${{ inputs.unikernel }}_${{ inputs.hypervisor }}-${LOCALARCH} ${{ github.workspace }}/artifact/${{ inputs.unikernel }}_${{ inputs.hypervisor }}-${{inputs.matrix}}
+        cp workdir/build/${{ inputs.unikernel }}_${{ inputs.hypervisor }}-${LOCALARCH} ${{ github.workspace }}/artifact/${{ inputs.unikernel }}_${{ inputs.hypervisor }}-${{inputs.matrix}}
 
     - name: Upload packaged artifact to s3
       uses: cloudkernels/minio-upload@v5
@@ -101,6 +105,7 @@ jobs:
         tags: |
             type=sha,prefix=${{ inputs.matrix }}-
             type=ref,event=branch,prefix=${{ inputs.matrix }}-
+            type=raw,value=${{ inputs.matrix }}
 
     - name: Build and push ${{ inputs.matrix }} image
       id: build-and-push

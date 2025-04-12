@@ -40,11 +40,11 @@ jobs:
 
     - name: Create manifest
       run: |
-        TAGS=harbor.nbfc.io/nubificus/${{ inputs.unikernel }}-${{ inputs.hypervisor }}:latest
+        TAGS=harbor.nbfc.io/${{ github.repository }}/${{ inputs.unikernel }}-${{ inputs.hypervisor }}:latest
         docker manifest rm $TAGS || true
         docker manifest create $TAGS \
-           --amend harbor.nbfc.io/nubificus/${{ inputs.unikernel }}-${{ inputs.hypervisor }}:amd64 \
-           --amend harbor.nbfc.io/nubificus/${{ inputs.unikernel }}-${{ inputs.hypervisor }}:arm64
+           --amend harbor.nbfc.io/${{ github.repository }}/${{ inputs.unikernel }}-${{ inputs.hypervisor }}:amd64 \
+           --amend harbor.nbfc.io/${{ github.repository }}/${{ inputs.unikernel }}-${{ inputs.hypervisor }}:arm64
         HASH=$(docker manifest push $TAGS)
         echo "hash=$HASH" >> $GITHUB_ENV
         echo "tags=$TAGS" >> $GITHUB_ENV
@@ -56,7 +56,7 @@ jobs:
         DIGEST: ${{ env.hash }}
         TAGS: ${{ env.tags }}
       run: |
-        cosign sign --yes harbor.nbfc.io/nubificus/${{ inputs.unikernel }}-${{ inputs.hypervisor }}@${{ env.DIGEST }} \
+        cosign sign --yes harbor.nbfc.io/${{ github.repository }}/${{ inputs.unikernel }}-${{ inputs.hypervisor }}@${{ env.DIGEST }} \
         -a "repo=${{github.repository}}" \
         -a "workflow=${{github.workflow}}" \
         -a "ref=${{github.sha}}" \
