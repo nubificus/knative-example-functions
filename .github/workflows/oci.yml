@@ -41,6 +41,25 @@ jobs:
       harbor_user: ${{ secrets.HARBOR_USER }}
       harbor_secret: ${{ secrets.HARBOR_SECRET }}
 
+  build-bunny:
+    needs: [prepare]
+    strategy:
+      matrix:
+        archconfig: [ amd64, arm64 ]
+        unikernel: [ mirage-httpreply ]
+        hypervisor: [ hvt, spt ]
+      fail-fast: false
+    uses: ./.github/workflows/build-bunny.yml
+    with:
+      matrix: ${{ matrix.archconfig }}
+      unikernel: ${{ matrix.unikernel }}
+      hypervisor: ${{ matrix.hypervisor }}
+    secrets:
+      aws_access_key: ${{ secrets.AWS_ACCESS_KEY}}
+      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+      harbor_user: ${{ secrets.HARBOR_USER }}
+      harbor_secret: ${{ secrets.HARBOR_SECRET }}
+
   buildgeneric:
     needs: [prepare]
     strategy:
@@ -81,6 +100,20 @@ jobs:
       matrix:
         unikernel: [ httpreply ]
         hypervisor: [ qemu, fc]
+    with:
+      unikernel: ${{ matrix.unikernel }}
+      hypervisor: ${{ matrix.hypervisor }}
+    secrets:
+      harbor_user: ${{ secrets.HARBOR_USER }}
+      harbor_secret: ${{ secrets.HARBOR_SECRET }}
+
+  manifest-bunny:
+    needs: [build-bunny]
+    uses: ./.github/workflows/manifest.yml
+    strategy:
+      matrix:
+        unikernel: [ mirage-httpreply ]
+        hypervisor: [ hvt, spt ]
     with:
       unikernel: ${{ matrix.unikernel }}
       hypervisor: ${{ matrix.hypervisor }}

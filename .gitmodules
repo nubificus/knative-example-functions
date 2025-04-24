@@ -9,3 +9,6 @@
 	path = go-httpreply
 	url = https://github.com/nubificus/helloworld-knative
 	branch = feat_athk8s
+[submodule "mirage-httpreply"]
+	path = mirage-httpreply
+	url = https://github.com/nubificus/mirage-httpreply

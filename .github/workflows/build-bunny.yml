@@ -1,0 +1,105 @@
+name: Buildandsign
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        type: string
+        default: '["base", "dind", "2204"]'
+      runner-archs:
+        type: string
+        default: '["amd64", "arm64"]'
+      runner-arch-map:
+        type: string
+        default: '[{"amd64":"x86_64", "arm64":"aarch64", "arm":"armv7l"}]'
+      matrix:
+        required: true
+        type: string
+      unikernel:
+        required: true
+        type: string
+      hypervisor:
+        required: true
+        type: string
+    secrets:
+      GIT_CLONE_PAT:
+        required: false
+      aws_access_key:
+        required: true
+      aws_secret_access_key:
+        required: true
+      harbor_secret:
+        required: true
+      harbor_user:
+        required: true
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
+env:
+  REGISTRY: ${{ github.event.inputs.registry || 'harbor.nbfc.io' }}
+  # NOTE: We assume that a project named after the repo owner exists in the
+  # registry. The image will be uploaded as <repo_name> under the <repo_owner>
+  # project.
+  REGISTRY_IMAGE: ${{ github.event.inputs.registry || 'harbor.nbfc.io' }}/${{ github.repository }}/${{ inputs.unikernel }}-${{ inputs.hypervisor }}
+  RUNNER_ARCH_MAP: '[{"amd64":"x86_64", "arm64":"aarch64", "arm":"armv7l"}]'
+
+
+
+jobs:
+  buildunikernel:
+    name: ${{ inputs.matrix }}-${{ inputs.hypervisor }}-${{ inputs.unikernel }}
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ${{ format('{0}-{1}', join(fromJSON(inputs.runner), '-'), inputs.matrix) }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Login to registry ${{ env.REGISTRY }}
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ secrets.HARBOR_USER }}
+        password: ${{ secrets.HARBOR_SECRET }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Extract Docker metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY_IMAGE }}
+        tags: |
+            type=sha,prefix=${{ inputs.matrix }}-
+            type=ref,event=branch,prefix=${{ inputs.matrix }}-
+            type=raw,value=${{ inputs.matrix }}
+
+    - name: Build and push ${{ inputs.matrix }} image
+      id: build-and-push
+      uses: docker/build-push-action@v6
+      with:
+          context: ./${{ inputs.unikernel }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/${{ inputs.matrix }}
+          push: true
+          provenance: false
+          file: ./${{ inputs.unikernel }}/bunnyfile-${{inputs.hypervisor}}-${{inputs.matrix}}
+          build-args: |
+            ARCHTAG=${{ fromJson(env.RUNNER_ARCH_MAP)[0][matrix.arch] }}
+            BRANCH=${{ github.event.ref_name || github.ref_name }}
+
+    - name: Set ${{ matrix.arch }} digest output
+      id: set-outputs
+      run: |
+          # Workaround for https://github.com/actions/runner/issues/2499
+          echo "digest-${{ matrix.arch }}=${{ steps.build-and-push.outputs.digest }}" \
+            >> "$GITHUB_OUTPUT"
+      shell: bash
