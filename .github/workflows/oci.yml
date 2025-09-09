@@ -22,31 +22,50 @@ jobs:
         run: echo "Will spawn jobs to build, sign & push"
 
 
-  build:
-    needs: [prepare]
-    strategy:
-      matrix:
-        archconfig: [ amd64, arm64 ]
-        unikernel: [ httpreply ]
-        hypervisor: [ qemu, fc]
-      fail-fast: false
-    uses: ./.github/workflows/build.yml
-    with:
-      matrix: ${{ matrix.archconfig }}
-      unikernel: ${{ matrix.unikernel }}
-      hypervisor: ${{ matrix.hypervisor }}
-    secrets:
-      aws_access_key: ${{ secrets.AWS_ACCESS_KEY}}
-      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-      harbor_user: ${{ secrets.HARBOR_USER }}
-      harbor_secret: ${{ secrets.HARBOR_SECRET }}
+#  build:
+#    needs: [prepare]
+#    strategy:
+#      matrix:
+#        archconfig: [ amd64, arm64 ]
+#        unikernel: [ httpreply ]
+#        hypervisor: [ qemu, fc]
+#      fail-fast: false
+#    uses: ./.github/workflows/build.yml
+#    with:
+#      matrix: ${{ matrix.archconfig }}
+#      unikernel: ${{ matrix.unikernel }}
+#      hypervisor: ${{ matrix.hypervisor }}
+#    secrets:
+#      aws_access_key: ${{ secrets.AWS_ACCESS_KEY}}
+#      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+#      harbor_user: ${{ secrets.HARBOR_USER }}
+#      harbor_secret: ${{ secrets.HARBOR_SECRET }}
+#
+#  build-bunny:
+#    needs: [prepare]
+#    strategy:
+#      matrix:
+#        archconfig: [ amd64, arm64 ]
+#        unikernel: [ mirage-httpreply ]
+#        hypervisor: [ hvt, spt ]
+#      fail-fast: false
+#    uses: ./.github/workflows/build-bunny.yml
+#    with:
+#      matrix: ${{ matrix.archconfig }}
+#      unikernel: ${{ matrix.unikernel }}
+#      hypervisor: ${{ matrix.hypervisor }}
+#    secrets:
+#      aws_access_key: ${{ secrets.AWS_ACCESS_KEY}}
+#      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+#      harbor_user: ${{ secrets.HARBOR_USER }}
+#      harbor_secret: ${{ secrets.HARBOR_SECRET }}
 
-  build-bunny:
+  build-rumprun:
     needs: [prepare]
     strategy:
       matrix:
         archconfig: [ amd64, arm64 ]
-        unikernel: [ mirage-httpreply ]
+        unikernel: [ rumprun-httpreply]
         hypervisor: [ hvt, spt ]
       fail-fast: false
     uses: ./.github/workflows/build-bunny.yml
@@ -60,59 +79,73 @@ jobs:
       harbor_user: ${{ secrets.HARBOR_USER }}
       harbor_secret: ${{ secrets.HARBOR_SECRET }}
 
-  buildgeneric:
-    needs: [prepare]
-    strategy:
-      matrix:
-        archconfig: [ amd64, arm64]
-        app: [ httpreply ]
-        variant: [ c, go ]
-      fail-fast: false
-    uses: ./.github/workflows/build-generic.yml
-    with:
-      matrix: ${{ matrix.archconfig }}
-      app: ${{ matrix.app }}
-      variant: ${{ matrix.variant }}
-    secrets:
-      aws_access_key: ${{ secrets.AWS_ACCESS_KEY}}
-      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-      harbor_user: ${{ secrets.HARBOR_USER }}
-      harbor_secret: ${{ secrets.HARBOR_SECRET }}
+#  buildgeneric:
+#    needs: [prepare]
+#    strategy:
+#      matrix:
+#        archconfig: [ amd64, arm64]
+#        app: [ httpreply ]
+#        variant: [ c, go ]
+#      fail-fast: false
+#    uses: ./.github/workflows/build-generic.yml
+#    with:
+#      matrix: ${{ matrix.archconfig }}
+#      app: ${{ matrix.app }}
+#      variant: ${{ matrix.variant }}
+#    secrets:
+#      aws_access_key: ${{ secrets.AWS_ACCESS_KEY}}
+#      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+#      harbor_user: ${{ secrets.HARBOR_USER }}
+#      harbor_secret: ${{ secrets.HARBOR_SECRET }}
+#
+#  manifestgeneric:
+#    needs: [buildgeneric]
+#    uses: ./.github/workflows/manifest.yml
+#    strategy:
+#      matrix:
+#        app: [ httpreply ]
+#        variant: [ c, go ]
+#    with:
+#      unikernel: ${{ matrix.app }}
+#      hypervisor: ${{ matrix.variant}}
+#    secrets:
+#      harbor_user: ${{ secrets.HARBOR_USER }}
+#      harbor_secret: ${{ secrets.HARBOR_SECRET }}
+#
+#  manifest:
+#    needs: [build]
+#    uses: ./.github/workflows/manifest.yml
+#    strategy:
+#      matrix:
+#        unikernel: [ httpreply ]
+#        hypervisor: [ qemu, fc]
+#    with:
+#      unikernel: ${{ matrix.unikernel }}
+#      hypervisor: ${{ matrix.hypervisor }}
+#    secrets:
+#      harbor_user: ${{ secrets.HARBOR_USER }}
+#      harbor_secret: ${{ secrets.HARBOR_SECRET }}
+#
+#  manifest-bunny:
+#    needs: [build-bunny]
+#    uses: ./.github/workflows/manifest.yml
+#    strategy:
+#      matrix:
+#        unikernel: [ mirage-httpreply ]
+#        hypervisor: [ hvt, spt ]
+#    with:
+#      unikernel: ${{ matrix.unikernel }}
+#      hypervisor: ${{ matrix.hypervisor }}
+#    secrets:
+#      harbor_user: ${{ secrets.HARBOR_USER }}
+#      harbor_secret: ${{ secrets.HARBOR_SECRET }}
 
-  manifestgeneric:
-    needs: [buildgeneric]
+  manifest-rumprun:
+    needs: [build-rumprun]
     uses: ./.github/workflows/manifest.yml
     strategy:
       matrix:
-        app: [ httpreply ]
-        variant: [ c, go ]
-    with:
-      unikernel: ${{ matrix.app }}
-      hypervisor: ${{ matrix.variant}}
-    secrets:
-      harbor_user: ${{ secrets.HARBOR_USER }}
-      harbor_secret: ${{ secrets.HARBOR_SECRET }}
-
-  manifest:
-    needs: [build]
-    uses: ./.github/workflows/manifest.yml
-    strategy:
-      matrix:
-        unikernel: [ httpreply ]
-        hypervisor: [ qemu, fc]
-    with:
-      unikernel: ${{ matrix.unikernel }}
-      hypervisor: ${{ matrix.hypervisor }}
-    secrets:
-      harbor_user: ${{ secrets.HARBOR_USER }}
-      harbor_secret: ${{ secrets.HARBOR_SECRET }}
-
-  manifest-bunny:
-    needs: [build-bunny]
-    uses: ./.github/workflows/manifest.yml
-    strategy:
-      matrix:
-        unikernel: [ mirage-httpreply ]
+        unikernel: [ rumprun-httpreply ]
         hypervisor: [ hvt, spt ]
     with:
       unikernel: ${{ matrix.unikernel }}
